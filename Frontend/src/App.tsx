@@ -2,9 +2,9 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '../../Frontend/src/context/AuthContext';
 import { Landing } from '../../Frontend/src/pages/Landing';
-import { Dashboard } from '../../Frontend/src/pages/Dashboard';
 import { Login } from '../../Frontend/src/pages/Login';
 import { SignUp } from '../../Frontend/src/pages/Signup';
+import { Dashboard } from './pages/Dashboard';
 import { Documentation } from './pages/Documentation';
 import { CaseStudies } from './pages/CaseStudies';
 
