@@ -12,7 +12,7 @@ export const Footer = () => {
               <span className="text-xl font-semibold">LendGuardAI</span>
             </div>
             <p className="text-gray-600 mb-6 max-w-md">
-              AI-powered early warning system for loan defaults. 
+              AI-powered early warning system for loan defaults.
               Helping lenders identify borrower risk before it's too late.
             </p>
             <div className="flex space-x-4">
@@ -27,28 +27,25 @@ export const Footer = () => {
               </a>
             </div>
           </div>
-          
+
           <div>
             <h3 className="font-semibold text-gray-900 mb-4">Product</h3>
             <ul className="space-y-3">
               <li><a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Features</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Pricing</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Case Studies</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Documentation</a></li>
+              <li><a href="/case-studies" className="text-gray-600 hover:text-blue-600 transition-colors">Case Studies</a></li>
+              <li><a href="/docs" className="text-gray-600 hover:text-blue-600 transition-colors">Documentation</a></li>
             </ul>
           </div>
-          
+
           <div>
             <h3 className="font-semibold text-gray-900 mb-4">Company</h3>
             <ul className="space-y-3">
               <li><a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">About Us</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Careers</a></li>
-              <li><a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Blog</a></li>
               <li><a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Contact Us</a></li>
             </ul>
           </div>
         </div>
-        
+
         <div className="border-t border-gray-200 pt-8 mt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-500 text-sm">© 2025 LendGuardAI. All rights reserved.</p>

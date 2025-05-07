@@ -37,13 +37,12 @@ export const Navbar = ({ showAuthButtons = true }: NavbarProps) => {
             <span className="text-xl font-semibold">LendGuardAI</span>
           </Link>
           
-          {location.pathname === '/' && (
+          
             <nav className="hidden md:flex space-x-8">
               <a href="#features" className="text-gray-700 hover:text-blue-600 transition-colors">Features</a>
               <a href="#benefits" className="text-gray-700 hover:text-blue-600 transition-colors">Benefits</a>
               <a href="#demo" className="text-gray-700 hover:text-blue-600 transition-colors">Demo</a>
             </nav>
-          )}
 
           {showAuthButtons && (
             <div className="flex space-x-4">

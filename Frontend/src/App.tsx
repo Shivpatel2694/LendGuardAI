@@ -5,6 +5,8 @@ import { Landing } from '../../Frontend/src/pages/Landing';
 import { Dashboard } from '../../Frontend/src/pages/Dashboard';
 import { Login } from '../../Frontend/src/pages/Login';
 import { SignUp } from '../../Frontend/src/pages/Signup';
+import { Documentation } from './pages/Documentation';
+import { CaseStudies } from './pages/CaseStudies';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { currentUser } = useAuth();
@@ -27,6 +29,8 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route path='/docs' element={<Documentation />} />
+          <Route path='/case-studies' element={<CaseStudies/>}/>
         </Routes>
       </AuthProvider>
     </Router>
