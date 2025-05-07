@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Navbar } from '../Components/Navbar';
 import {
   Home,
   BarChart,
@@ -11,16 +10,13 @@ import {
   HelpCircle,
   Bell,
   Search,
-  ChevronDown,
-  Menu,
-  X,
-  LogOut,
   Database,
   Check,
   Clock,
   ArrowRight,
   CreditCard,
-  TrendingUp
+  TrendingUp,
+  X
 } from 'lucide-react';
 
 // Mock data generation function
@@ -186,51 +182,48 @@ const RecentActivityItem = ({ title, time, description, icon, color }) => (
 );
 
 export const Dashboard = () => {
-  const { logout, currentUser } = useAuth ? useAuth() : { logout: () => console.log('Logout clicked'), user: { email: 'demo@example.com' } };
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const userMenuRef = useRef(null);
-  const [showModal, setShowModal] = useState(true);
+  const { currentUser } = useAuth ? useAuth() : { currentUser: { email: 'demo@example.com' } };
+  const [showModal, setShowModal] = useState(false);
   const [borrowers, setBorrowers] = useState([]);
-const user = currentUser;
-  const sidebarItems = [
-    { name: "Dashboard", icon: <Home size={20} />, active: true },
-    { name: "Analytics", icon: <BarChart size={20} /> },
-    { name: "Customers", icon: <Users size={20} /> },
-    { name: "Settings", icon: <Settings size={20} /> },
-    { name: "Help Center", icon: <HelpCircle size={20} /> },
-  ];
+  const [isLoading, setIsLoading] = useState(true);
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
+  // Load saved data on component mount
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setUserMenuOpen(false);
+    setIsLoading(true);
+    try {
+      const savedData = localStorage.getItem('mockBorrowerData');
+      if (savedData) {
+        setBorrowers(JSON.parse(savedData));
+        setShowModal(false);
+      } else {
+        setShowModal(true);
       }
+    } catch (error) {
+      console.error('Error loading saved data:', error);
+      setShowModal(true);
+    } finally {
+      setIsLoading(false);
     }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [userMenuRef]);
-
-  const toggleUserMenu = () => {
-    setUserMenuOpen(!userMenuOpen);
-  };
-
-  const handleLogout = () => {
-    logout();
-    setUserMenuOpen(false);
-  };
+  }, []);
 
   const handleModalComplete = () => {
     const mockBorrowers = generateMockBorrowers();
     setBorrowers(mockBorrowers);
+    
+    // Save to localStorage for persistence
+    try {
+      localStorage.setItem('mockBorrowerData', JSON.stringify(mockBorrowers));
+    } catch (error) {
+      console.error('Error saving data to localStorage:', error);
+    }
+    
     setShowModal(false);
+  };
+  
+  // Function to clear saved data and regenerate
+  const handleResetData = () => {
+    localStorage.removeItem('mockBorrowerData');
+    setShowModal(true);
   };
 
   const totalBorrowers = borrowers.length;
@@ -243,216 +236,138 @@ const user = currentUser;
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen bg-gray-50 flex flex-col"
+      className="p-8 bg-gray-50"
     >
       {showModal && <MockDataModal onComplete={handleModalComplete} />}
-      <Navbar showAuthButtons={false} />
-
-      <div className="flex flex-1 pt-16">
-        {/* Mobile Sidebar Toggle */}
-        <div className="block lg:hidden fixed bottom-4 right-4 z-50">
-          <button
-            onClick={toggleSidebar}
-            className="bg-blue-600 text-white p-3 rounded-full shadow-lg"
-          >
-            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
+      
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         </div>
-
-        {/* Sidebar */}
-        <motion.aside
-          initial={{ width: sidebarOpen ? 250 : 0 }}
-          animate={{ width: sidebarOpen ? 250 : 0 }}
-          transition={{ duration: 0.3 }}
-          className={`bg-white shadow-md fixed h-full z-40 lg:static overflow-hidden ${sidebarOpen ? 'block' : 'hidden lg:block'}`}
-        >
-          <div className="p-6 border-b">
-            <h2 className="text-xl font-bold">MyApp</h2>
-            <p className="text-gray-500 text-sm mt-1">Lending Dashboard</p>
-          </div>
-
-          <div className="py-4">
-            <ul>
-              {sidebarItems.map((item, index) => (
-                <li key={index}>
-                  <a
-                    href="#"
-                    className={`flex items-center gap-3 px-6 py-3 hover:bg-gray-50 ${item.active ? 'bg-blue-50 text-blue-600 font-medium border-r-4 border-blue-600' : 'text-gray-600'}`}
-                  >
-                    {item.icon}
-                    <span>{item.name}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="absolute bottom-0 w-full border-t p-4">
-            <div className="flex items-center gap-3 relative" ref={userMenuRef}>
-              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                {user?.photoURL ? (
-                  <img
-                    src={user.photoURL}
-                    alt="User"
-                    className="h-10 w-10 rounded-full object-cover"
+      ) : (
+        <>
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold">Lending Dashboard</h1>
+                <p className="text-gray-500">Welcome back, here's what's happening today.</p>
+              </div>
+              <div className="flex gap-2">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    className="pl-10 pr-4 py-2 bg-white border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-64"
                   />
-                ) : (
-                  <span className="font-medium text-gray-600">
-                    {user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U'}
-                  </span>
+                  <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                </div>
+                <button className="p-2 bg-white border rounded-lg shadow-sm hover:bg-gray-50">
+                  <Bell size={18} />
+                </button>
+                {borrowers.length > 0 && (
+                  <button 
+                    onClick={handleResetData}
+                    className="p-2 bg-white border rounded-lg shadow-sm hover:bg-gray-50 text-xs"
+                    title="Reset mock data"
+                  >
+                    <Database size={18} className="text-gray-500" />
+                  </button>
                 )}
               </div>
-              <div className="flex-1 overflow-hidden">
-                <p className="font-medium truncate">
-                  {user?.displayName || user?.email || 'User'}
-                </p>
-                <p className="text-gray-500 text-xs">Admin Account</p>
-              </div>
-              <button
-                onClick={toggleUserMenu}
-                className="hover:bg-gray-100 p-1 rounded-full"
-              >
-                <ChevronDown size={16} className={`transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {userMenuOpen && (
-                <div className="absolute bottom-12 right-0 bg-white shadow-lg rounded-lg w-48 py-2 z-50">
-                  <div className="px-4 py-2 border-b">
-                    <p className="font-medium truncate">
-                      {user?.displayName || user?.email || 'User'}
-                    </p>
-                    <p className="text-gray-500 text-xs">Admin Account</p>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-red-600"
-                  >
-                    <LogOut size={16} />
-                    <span>Sign Out</span>
-                  </button>
-                </div>
-              )}
             </div>
           </div>
-        </motion.aside>
 
-        {/* Main Content */}
-        <main className={`flex-1 p-6 transition-all duration-300 ${sidebarOpen ? 'lg:pl-6' : 'lg:pl-6'}`}>
-          <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="mb-8">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <h1 className="text-2xl font-bold">Lending Dashboard</h1>
-                  <p className="text-gray-500">Welcome back, here's what's happening today.</p>
+          {borrowers.length > 0 ? (
+            <>
+              {/* Stats Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <StatCard
+                  title="Total Borrowers"
+                  value={totalBorrowers}
+                  icon={<Users size={20} className="text-white" />}
+                  trend={8.2}
+                  color="bg-blue-500"
+                />
+                <StatCard
+                  title="Total Loan Amount"
+                  value={`₹${totalLoanAmount.toLocaleString()}`}
+                  icon={<CreditCard size={20} className="text-white" />}
+                  trend={12.5}
+                  color="bg-green-500"
+                />
+                <StatCard
+                  title="Avg. Risk Score"
+                  value={avgRiskScore}
+                  icon={<BarChart3 size={20} className="text-white" />}
+                  trend={-2.4}
+                  color="bg-yellow-500"
+                />
+                <StatCard
+                  title="High Risk Borrowers"
+                  value={highRiskCount}
+                  icon={<TrendingUp size={20} className="text-white" />}
+                  trend={5.7}
+                  color="bg-purple-500"
+                />
+              </div>
+
+              {/* Charts and Activity */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                  <ChartPlaceholder />
                 </div>
-                <div className="flex gap-2">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Search..."
-                      className="pl-10 pr-4 py-2 bg-white border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full md:w-64"
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                  <h3 className="text-lg font-medium mb-4">Recent Activity</h3>
+                  <div className="space-y-1 divide-y">
+                    <RecentActivityItem
+                      title="New Borrower"
+                      time="2 hours ago"
+                      description={`${borrowers[0]?.name || 'A customer'} signed up as a new borrower`}
+                      icon={<Users size={16} className="text-white" />}
+                      color="bg-blue-500"
                     />
-                    <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                    <RecentActivityItem
+                      title="Loan Approved"
+                      time="5 hours ago"
+                      description={`Loan for ₹${borrowers[1]?.loanAmount.toLocaleString() || '150,000'} was approved`}
+                      icon={<BarChart size={16} className="text-white" />}
+                      color="bg-green-500"
+                    />
+                    <RecentActivityItem
+                      title="Risk Alert"
+                      time="1 day ago"
+                      description="High risk borrower identified requiring review"
+                      icon={<HelpCircle size={16} className="text-white" />}
+                      color="bg-yellow-500"
+                    />
+                    <RecentActivityItem
+                      title="System Update"
+                      time="2 days ago"
+                      description="Risk assessment algorithm improved to version 2.4"
+                      icon={<Settings size={16} className="text-white" />}
+                      color="bg-purple-500"
+                    />
                   </div>
-                  <button className="p-2 bg-white border rounded-lg shadow-sm hover:bg-gray-50">
-                    <Bell size={18} />
-                  </button>
                 </div>
               </div>
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <Database size={48} className="mx-auto text-gray-400 mb-4" />
+              <h2 className="text-xl font-semibold text-gray-700 mb-2">No Borrower Data Available</h2>
+              <p className="text-gray-500 mb-6">Generate mock data to see dashboard analytics and borrower profiles.</p>
+              <button
+                onClick={() => setShowModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium inline-flex items-center"
+              >
+                Generate Mock Data
+                <ArrowRight size={16} className="ml-2" />
+              </button>
             </div>
-
-            {borrowers.length > 0 ? (
-              <>
-                {/* Stats Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                  <StatCard
-                    title="Total Borrowers"
-                    value={totalBorrowers}
-                    icon={<Users size={20} className="text-white" />}
-                    trend={8.2}
-                    color="bg-blue-500"
-                  />
-                  <StatCard
-                    title="Total Loan Amount"
-                    value={`₹${totalLoanAmount.toLocaleString()}`}
-                    icon={<CreditCard size={20} className="text-white" />}
-                    trend={12.5}
-                    color="bg-green-500"
-                  />
-                  <StatCard
-                    title="Avg. Risk Score"
-                    value={avgRiskScore}
-                    icon={<BarChart3 size={20} className="text-white" />}
-                    trend={-2.4}
-                    color="bg-yellow-500"
-                  />
-                  <StatCard
-                    title="High Risk Borrowers"
-                    value={highRiskCount}
-                    icon={<TrendingUp size={20} className="text-white" />}
-                    trend={5.7}
-                    color="bg-purple-500"
-                  />
-                </div>
-
-                {/* Charts and Activity */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2">
-                    <ChartPlaceholder />
-                  </div>
-                  <div className="bg-white p-6 rounded-lg shadow-md">
-                    <h3 className="text-lg font-medium mb-4">Recent Activity</h3>
-                    <div className="space-y-1 divide-y">
-                      <RecentActivityItem
-                        title="New Borrower"
-                        time="2 hours ago"
-                        description={`${borrowers[0]?.name || 'A customer'} signed up as a new borrower`}
-                        icon={<Users size={16} className="text-white" />}
-                        color="bg-blue-500"
-                      />
-                      <RecentActivityItem
-                        title="Loan Approved"
-                        time="5 hours ago"
-                        description={`Loan for ₹${borrowers[1]?.loanAmount.toLocaleString() || '150,000'} was approved`}
-                        icon={<BarChart size={16} className="text-white" />}
-                        color="bg-green-500"
-                      />
-                      <RecentActivityItem
-                        title="Risk Alert"
-                        time="1 day ago"
-                        description="High risk borrower identified requiring review"
-                        icon={<HelpCircle size={16} className="text-white" />}
-                        color="bg-yellow-500"
-                      />
-                      <RecentActivityItem
-                        title="System Update"
-                        time="2 days ago"
-                        description="Risk assessment algorithm improved to version 2.4"
-                        icon={<Settings size={16} className="text-white" />}
-                        color="bg-purple-500"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-12">
-                <Database size={48} className="mx-auto text-gray-400 mb-4" />
-                <h2 className="text-xl font-semibold text-gray-700 mb-2">No Borrower Data Available</h2>
-                <p className="text-gray-500 mb-6">Generate mock data to see dashboard analytics and borrower profiles.</p>
-                <button
-                  onClick={() => setShowModal(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium inline-flex items-center"
-                >
-                  Generate Mock Data
-                  <ArrowRight size={16} className="ml-2" />
-                </button>
-              </div>
-            )}
-          </div>
-        </main>
-      </div>
+          )}
+        </>
+      )}
     </motion.div>
   );
 };

@@ -7,6 +7,8 @@ import { SignUp } from '../../Frontend/src/pages/Signup';
 import { Dashboard } from './pages/Dashboard';
 import { Documentation } from './pages/Documentation';
 import { CaseStudies } from './pages/CaseStudies';
+import { Layout } from './Components/Layout';
+import {AnalyticsPage} from './pages/Analytics';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { currentUser } = useAuth();
@@ -21,6 +23,7 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route element={<Layout/>}>
           <Route
             path="/dashboard"
             element={
@@ -29,6 +32,8 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route path='/analytics' element={<AnalyticsPage  />}/>
+          </Route>
           <Route path='/docs' element={<Documentation />} />
           <Route path='/case-studies' element={<CaseStudies/>}/>
         </Routes>
