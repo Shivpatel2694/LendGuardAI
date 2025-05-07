@@ -1,0 +1,6 @@
+# Docker-related files
+*.log
+docker-compose.override.yml
+.env
+data/db/
+data/

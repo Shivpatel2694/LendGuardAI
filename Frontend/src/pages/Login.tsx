@@ -1,24 +1,34 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
-// import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { TrendingUp, Mail, Lock } from 'lucide-react';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  // const { signUp } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e:any) => {
     e.preventDefault();
-    // try {
-    //   await signUp(email, password);
-    //   navigate('/dashboard');
-    // } catch (err) {
-    //   setError('Error creating account');
-    // }
+    setError('');
+    setIsLoading(true);
+
+    try {
+      await login(email, password);
+      navigate('/dashboard');
+    } catch (err) {
+      if (err instanceof Error && (err as any).response?.data?.error) {
+        setError((err as any).response.data.error);
+      } else {
+        setError('Invalid email or password');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -51,7 +61,7 @@ export const Login = () => {
           <div className="p-6">
             <form className="space-y-6" onSubmit={handleSubmit}>
               {error && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"
@@ -59,7 +69,7 @@ export const Login = () => {
                   {error}
                 </motion.div>
               )}
-              
+
               {/* Email field */}
               <div className="space-y-2">
                 <label htmlFor="email-address" className="block text-sm font-medium text-gray-700">
@@ -79,6 +89,7 @@ export const Login = () => {
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -102,6 +113,7 @@ export const Login = () => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -121,9 +133,12 @@ export const Login = () => {
                   type="submit"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                    isLoading ? 'opacity-70 cursor-not-allowed' : ''
+                  }`}
+                  disabled={isLoading}
                 >
-                  Sign in
+                  {isLoading ? 'Signing in...' : 'Sign in'}
                 </motion.button>
               </div>
             </form>

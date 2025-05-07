@@ -1,11 +1,11 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 // import { useAuth } from '../context/AuthContext';
 import { Demo } from '../Components/Demo';
 import { Navbar } from '../Components/Navbar';
+import { useAuth } from '../context/AuthContext';
 
 export const Dashboard = () => {
-//   const { signOut } = useAuth();
+   const { logout } = useAuth();
 
   return (
     <motion.div
@@ -20,7 +20,7 @@ export const Dashboard = () => {
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold">Dashboard</h1>
             <button
-              // onClick={() => signOut()}
+              onClick={() => logout()}
               className="bg-white text-gray-600 px-4 py-2 rounded-lg border hover:bg-gray-50 transition-colors"
             >
               Sign Out
