@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
 import {
   Home,
   BarChart,
@@ -16,45 +15,27 @@ import {
   ArrowRight,
   CreditCard,
   TrendingUp,
-  X
+  X,
+  Eye,
+  XCircle
 } from 'lucide-react';
 
-// Mock data generation function
-const generateMockBorrowers = () => {
-  const riskCategories = ['Low', 'Medium', 'High'];
-  const names = [
-    'Aisha Singh', 'Rahul Patel', 'Priya Sharma',
-    'Varun Gupta', 'Lakshmi Reddy', 'Vikram Malhotra',
-    'Deepa Joshi', 'Sanjay Kumar', 'Meera Choudhury',
-    'Arjun Nair', 'Divya Mehta', 'Raj Verma'
-  ];
-
-  return Array.from({ length: 12 }, (_, i) => ({
-    id: `B${1000 + i}`,
-    name: names[i],
-    loanAmount: Math.round(50000 + Math.random() * 450000),
-    riskScore: Math.round(300 + Math.random() * 500),
-    riskCategory: riskCategories[Math.floor(Math.random() * 3)],
-    incomeVerified: Math.random() > 0.3,
-    lastActivity: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toLocaleDateString()
-  }));
-};
-
 // Mock Data Modal Component
-const MockDataModal = ({ onComplete }: { onComplete: () => void }) => {
+const MockDataModal = ({ onComplete, lenderId }: { onComplete: () => void; lenderId: string }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [error, setError] = useState(null);
 
   const steps = [
     "Initializing process",
     "Generating synthetic borrower profiles",
-    "Creating financial history data",
-    "Calculating risk scores",
     "Preparing dashboard"
   ];
 
   const handleGenerateMockData = async () => {
     setIsLoading(true);
+    setError(null);
+    console.log('Generating mock data with lenderId:', lenderId);
 
     for (let i = 0; i < steps.length; i++) {
       setCurrentStep(i);
@@ -62,9 +43,26 @@ const MockDataModal = ({ onComplete }: { onComplete: () => void }) => {
     }
 
     try {
+      const token = localStorage.getItem('token') || 'mock-token';
+      console.log('Sending mock data request:', { lenderId });
+      const response = await fetch('http://localhost:3000/api/generate-mock-data', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ lenderId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to generate mock data: ${errorData.error || response.statusText}`);
+      }
+
+      localStorage.setItem('mockDataGenerated', 'true');
       onComplete();
     } catch (error) {
-      console.error('Error generating mock data:', error);
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -95,6 +93,12 @@ const MockDataModal = ({ onComplete }: { onComplete: () => void }) => {
             </div>
           </div>
         </div>
+
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="space-y-4 mb-6">
@@ -136,8 +140,285 @@ const MockDataModal = ({ onComplete }: { onComplete: () => void }) => {
   );
 };
 
+// Borrower Detail Modal Component
+const BorrowerDetailModal = ({ borrower, onClose }) => {
+  if (!borrower) return null;
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center overflow-y-auto">
+      <div className="bg-white rounded-lg p-6 max-w-4xl w-full m-4 max-h-screen overflow-y-auto">
+        <div className="flex justify-between items-center mb-6 sticky top-0 bg-white pt-2 pb-4 border-b">
+          <h2 className="text-2xl font-bold">Borrower Details</h2>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+          >
+            <XCircle size={24} />
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          {/* Personal Information */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Personal Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm text-gray-500">Full Name</p>
+                <p className="font-medium">{borrower.name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Email</p>
+                <p className="font-medium">{borrower.email}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Phone</p>
+                <p className="font-medium">{borrower.phone_number}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Date of Birth</p>
+                <p className="font-medium">{formatDate(borrower.date_of_birth)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Address</p>
+                <p className="font-medium">{borrower.address}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Aadhar Number</p>
+                <p className="font-medium">{borrower.aadhar_number || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">PAN Number</p>
+                <p className="font-medium">{borrower.pan_number || 'N/A'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Risk Assessment */}
+          {borrower.risk_score !== undefined && (
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="text-lg font-medium mb-3 text-gray-800">Risk Assessment</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <p className="text-sm text-gray-500">Risk Score</p>
+                  <p className="font-medium text-xl">{borrower.risk_score.toFixed(2)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Risk Level</p>
+                  <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+                    borrower.risk_level === 'Very Low Risk' ? 'bg-green-100 text-green-800' :
+                    borrower.risk_level === 'Low Risk' ? 'bg-green-100 text-green-800' :
+                    borrower.risk_level === 'Moderate Risk' ? 'bg-yellow-100 text-yellow-800' :
+                    borrower.risk_level === 'High Risk' ? 'bg-red-100 text-red-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {borrower.risk_level}
+                  </span>
+                </div>
+              </div>
+              <div className="mb-4">
+                <p className="text-sm text-gray-500">Risk Description</p>
+                <p className="font-medium">{borrower.risk_description}</p>
+              </div>
+              {borrower.risk_factors && borrower.risk_factors.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-500 font-medium mb-2">Key Risk Factors</p>
+                  <ul className="list-disc pl-5">
+                    {borrower.risk_factors.map((factor, index) => (
+                      <li key={index} className="text-sm">
+                        <span className="font-medium">{factor.factor}</span>: {factor.description} (Severity: {factor.severity}, Value: {factor.value})
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {borrower.recommendations && borrower.recommendations.length > 0 && (
+                <div>
+                  <p className="text-sm text-gray-500 font-medium mb-2">Recommendations</p>
+                  <ul className="list-disc pl-5">
+                    {borrower.recommendations.map((rec, index) => (
+                      <li key={index} className="text-sm">{rec}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Loan Details */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Loan Details</h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loan ID</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interest Rate</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tenure (Months)</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">EMI Amount</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disbursed Date</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {borrower.loans && borrower.loans.length > 0 ? (
+                    borrower.loans.map(loan => (
+                      <tr key={loan.id}>
+                        <td className="px-4 py-2 whitespace-nowrap">{loan.id.substring(0, 8)}...</td>
+                        <td className="px-4 py-2 whitespace-nowrap">₹{parseFloat(loan.loan_amount).toLocaleString()}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{loan.interest_rate}%</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{loan.tenure_months}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">₹{parseFloat(loan.emi_amount).toLocaleString()}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            loan.loan_status === 'Active' ? 'bg-green-100 text-green-800' :
+                            loan.loan_status === 'Late' ? 'bg-yellow-100 text-yellow-800' :
+                            loan.loan_status === 'Default' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {loan.loan_status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap">{formatDate(loan.disbursement_date)}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="px-4 py-4 text-center text-gray-500">No active loans</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Financial Transactions */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h3 className="text-lg font-medium mb-3 text-gray-800">Financial Transactions</h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Date</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {borrower.financial_transactions && borrower.financial_transactions.length > 0 ? (
+                    borrower.financial_transactions.map(transaction => (
+                      <tr key={transaction.id}>
+                        <td className="px-4 py-2 whitespace-nowrap">{formatDate(transaction.transaction_date)}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{transaction.account_number}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            transaction.transaction_type === 'Credit' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {transaction.transaction_type}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap">₹{parseFloat(transaction.amount).toLocaleString()}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{transaction.category || 'N/A'}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{transaction.description || 'N/A'}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="6" className="px-4 py-4 text-center text-gray-500">No financial transactions</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// BorrowerTable component for displaying borrower overview
+const BorrowerTable = ({ borrowers, onViewDetails }) => (
+  <div className="bg-white p-6 rounded-lg shadow-md">
+    <h3 className="text-lg font-medium mb-4">Borrower Details</h3>
+    <div className="overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Loan Amount</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Risk Score</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Risk Level</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {borrowers.map(borrower => (
+            <tr
+              key={borrower.id}
+              className="hover:bg-gray-50 cursor-pointer transition-colors"
+              onClick={() => onViewDetails(borrower)}
+            >
+              <td className="px-6 py-4 whitespace-nowrap">{borrower.name}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{borrower.email}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{borrower.phone_number}</td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                {parseFloat(borrower.loan_amount) > 0 ?
+                  `₹${parseFloat(borrower.loan_amount).toLocaleString()}` :
+                  '₹0 (No active loans)'}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                {borrower.risk_score !== undefined ? borrower.risk_score.toFixed(2) : 'N/A'}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                {parseFloat(borrower.loan_amount) === 0 ? (
+                  <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                    Low Risk
+                  </span>
+                ) : borrower.risk_level ? (
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    borrower.risk_level === 'Very Low Risk' ? 'bg-green-100 text-green-800' :
+                    borrower.risk_level === 'Low Risk' ? 'bg-green-100 text-green-800' :
+                    borrower.risk_level === 'Moderate Risk' ? 'bg-yellow-100 text-yellow-800' :
+                    borrower.risk_level === 'High Risk' ? 'bg-red-100 text-red-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {borrower.risk_level}
+                  </span>
+                ) : 'N/A'}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewDetails(borrower);
+                  }}
+                  className="flex items-center text-blue-600 hover:text-blue-800"
+                >
+                  <Eye size={16} className="mr-1" />
+                  <span>View Details</span>
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+);
+
 // Dashboard Components
-const StatCard = ({ title, value, icon, trend, color }) => (
+const StatCard = ({ title, value, icon, color }) => (
   <div className="bg-white p-6 rounded-lg shadow-md">
     <div className="flex justify-between items-start mb-4">
       <div>
@@ -148,88 +429,191 @@ const StatCard = ({ title, value, icon, trend, color }) => (
         {icon}
       </div>
     </div>
-    <div className="flex items-center text-sm">
-      <span className={trend > 0 ? "text-green-500" : "text-red-500"}>
-        {trend > 0 ? "+" : ""}{trend}%
-      </span>
-      <span className="text-gray-500 ml-2">since last month</span>
-    </div>
-  </div>
-);
-
-const ChartPlaceholder = () => (
-  <div className="bg-white p-6 rounded-lg shadow-md h-64">
-    <h3 className="text-lg font-medium mb-4">Borrower Performance Overview</h3>
-    <div className="h-48 flex items-center justify-center bg-gray-50 rounded-md">
-      <p className="text-gray-400">Chart visualization will appear here</p>
-    </div>
-  </div>
-);
-
-const RecentActivityItem = ({ title, time, description, icon, color }) => (
-  <div className="flex items-start gap-4 py-3">
-    <div className={`p-2 rounded-full ${color} flex-shrink-0 mt-1`}>
-      {icon}
-    </div>
-    <div>
-      <div className="flex items-center gap-2">
-        <h4 className="font-medium">{title}</h4>
-        <span className="text-gray-400 text-xs">{time}</span>
-      </div>
-      <p className="text-gray-500 text-sm">{description}</p>
-    </div>
   </div>
 );
 
 export const Dashboard = () => {
-  const { currentUser } = useAuth ? useAuth() : { currentUser: { email: 'demo@example.com' } };
   const [showModal, setShowModal] = useState(false);
   const [borrowers, setBorrowers] = useState([]);
+  const [selectedBorrower, setSelectedBorrower] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isNewUser, setIsNewUser] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Load saved data on component mount
+  // Mock currentUser for development
+  const currentUser = { id: '123e4567-e89b-12d3-a456-426614174000', email: 'demo@example.com' };
+
+  // Check if user is new and needs to see the modal
   useEffect(() => {
-    setIsLoading(true);
-    try {
-      const savedData = localStorage.getItem('mockBorrowerData');
-      if (savedData) {
-        setBorrowers(JSON.parse(savedData));
-        setShowModal(false);
-      } else {
-        setShowModal(true);
-      }
-    } catch (error) {
-      console.error('Error loading saved data:', error);
-      setShowModal(true);
-    } finally {
+    const mockDataGenerated = localStorage.getItem('mockDataGenerated') === 'true';
+    const isFirstLogin = !mockDataGenerated;
+
+    setIsNewUser(isFirstLogin);
+    setShowModal(isFirstLogin);
+
+    if (!isFirstLogin) {
+      fetchBorrowers();
+    } else {
       setIsLoading(false);
     }
   }, []);
 
-  const handleModalComplete = () => {
-    const mockBorrowers = generateMockBorrowers();
-    setBorrowers(mockBorrowers);
-
-    // Save to localStorage for persistence
+  const fetchBorrowers = async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      localStorage.setItem('mockBorrowerData', JSON.stringify(mockBorrowers));
-    } catch (error) {
-      console.error('Error saving data to localStorage:', error);
-    }
+      const token = localStorage.getItem('token') || 'mock-token';
+      const response = await fetch('http://localhost:3000/api/borrowers', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to fetch borrowers: ${errorData.error || response.statusText}`);
+      }
+
+      const borrowersData = await response.json();
+      // Fetch risk scores for each borrower
+      const borrowersWithRisk = await Promise.all(borrowersData.map(async (borrower) => {
+        try {
+          // Check if borrower has zero loan amount - if so, set as low risk
+          const loanAmount = parseFloat(borrower.loan_amount) || 0;
+
+          if (loanAmount === 0) {
+            return {
+              ...borrower,
+              risk_score: 0.00,
+              risk_level: 'Low Risk',
+              risk_description: 'No active loans. This borrower currently has no outstanding loans.',
+              risk_factors: [],
+              recommendations: ['Consider for future loan opportunities'],
+            };
+          }
+
+          // Transform borrower data to match BorrowerRequest schema
+          const transformedBorrower = {
+            id: borrower.id || 'unknown',
+            name: borrower.name || 'Unknown Borrower',
+            first_name: borrower.first_name || borrower.name?.split(' ')[0] || 'Unknown',
+            last_name: borrower.last_name || borrower.name?.split(' ').slice(1).join(' ') || 'Unknown',
+            email: borrower.email || 'unknown@example.com',
+            phone_number: borrower.phone_number || '0000000000',
+            address: borrower.address || 'Unknown Address',
+            date_of_birth: borrower.date_of_birth || '1990-01-01',
+            aadhar_number: borrower.aadhar_number || null,
+            pan_number: borrower.pan_number || null,
+            loan_amount: loanAmount,
+            loans: borrower.loans?.map(loan => ({
+              id: loan.id || 'unknown',
+              borrower_id: loan.borrower_id || borrower.id,
+              loan_amount: parseFloat(loan.loan_amount) || 0,
+              interest_rate: parseFloat(loan.interest_rate) || 0,
+              tenure_months: parseInt(loan.tenure_months) || 12,
+              emi_amount: parseFloat(loan.emi_amount) || 0,
+              disbursement_date: loan.disbursement_date || '2023-01-01',
+              loan_status: loan.loan_status && ['Active', 'Late', 'Default'].includes(loan.loan_status)
+                ? loan.loan_status
+                : 'Active',
+            })) || [],
+            financial_transactions: borrower.financial_transactions?.map(transaction => ({
+              id: transaction.id || 'unknown',
+              borrower_id: transaction.borrower_id || borrower.id,
+              account_number: transaction.account_number || 'unknown',
+              transaction_date: transaction.transaction_date || '2023-01-01',
+              transaction_type: transaction.transaction_type || 'Credit',
+              category: transaction.category || null,
+              amount: parseFloat(transaction.amount) || 0,
+              balance: transaction.balance ? parseFloat(transaction.balance) || null : null,
+              description: transaction.description || null,
+            })) || [],
+          };
+
+          console.log('Sending transformed borrower:', transformedBorrower);
+
+          const riskResponse = await fetch('http://localhost:8000/api/predict', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(transformedBorrower),
+          });
+
+          if (!riskResponse.ok) {
+            const errorData = await riskResponse.json();
+            throw new Error(`Failed to fetch risk score for borrower ${borrower.id}: ${JSON.stringify(errorData.detail)}`);
+          }
+
+          const riskData = await riskResponse.json();
+          return {
+            ...borrower,
+            risk_score: riskData.risk_score,
+            risk_level: riskData.risk_level,
+            risk_description: riskData.risk_description,
+            risk_factors: riskData.risk_factors,
+            recommendations: riskData.recommendations,
+          };
+        } catch (err) {
+          console.error(`Error fetching risk for borrower ${borrower.id}:`, err);
+
+          const loanAmount = parseFloat(borrower.loan_amount) || 0;
+          if (loanAmount === 0) {
+            return {
+              ...borrower,
+              risk_score: 0.2,
+              risk_level: 'Low Risk',
+              risk_description: 'No active loans. This borrower currently has no outstanding loans.',
+              risk_factors: [],
+              recommendations: ['Consider for future loan opportunities'],
+            };
+          }
+
+          return borrower;
+        }
+      }));
+
+      setBorrowers(borrowersWithRisk);
+    } catch (error) {
+      console.error('Error fetching borrowers:', error);
+      setError(error.message);
+      setBorrowers([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleModalComplete = async () => {
+    await fetchBorrowers();
     setShowModal(false);
   };
 
-  // Function to clear saved data and regenerate
+  const handleViewBorrowerDetails = (borrower) => {
+    setSelectedBorrower(borrower);
+  };
+
+  const handleCloseBorrowerDetails = () => {
+    setSelectedBorrower(null);
+  };
+
   const handleResetData = () => {
-    localStorage.removeItem('mockBorrowerData');
+    localStorage.removeItem('mockDataGenerated');
     setShowModal(true);
   };
 
+  // Calculate stats, counting zero loan borrowers as low risk
   const totalBorrowers = borrowers.length;
-  const totalLoanAmount = borrowers.reduce((sum, b) => sum + b.loanAmount, 0);
-  const avgRiskScore = borrowers.length > 0 ? Math.round(borrowers.reduce((sum, b) => sum + b.riskScore, 0) / totalBorrowers) : 0;
-  const highRiskCount = borrowers.filter(b => b.riskCategory === 'High').length;
+  const totalLoanAmount = borrowers.reduce((sum, b) => sum + (parseFloat(b.loan_amount) || 0), 0);
+  const avgRiskScore = borrowers.length > 0
+    ? Math.round(
+        borrowers.reduce((sum, b) => sum + (b.risk_score !== undefined ? b.risk_score : 0.2), 0) / totalBorrowers
+      )
+    : 0;
+  const highRiskCount = borrowers.filter(
+    b => b.risk_level === 'High Risk' || b.risk_level === 'Very High Risk'
+  ).length;
 
   return (
     <motion.div
@@ -238,7 +622,8 @@ export const Dashboard = () => {
       transition={{ duration: 0.5 }}
       className="p-8 bg-gray-50"
     >
-      {showModal && <MockDataModal onComplete={handleModalComplete} />}
+      {showModal && <MockDataModal onComplete={handleModalComplete} lenderId={currentUser.id} />}
+      {selectedBorrower && <BorrowerDetailModal borrower={selectedBorrower} onClose={handleCloseBorrowerDetails} />}
 
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
@@ -278,6 +663,12 @@ export const Dashboard = () => {
             </div>
           </div>
 
+          {error && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
+
           {borrowers.length > 0 ? (
             <>
               {/* Stats Row */}
@@ -286,71 +677,33 @@ export const Dashboard = () => {
                   title="Total Borrowers"
                   value={totalBorrowers}
                   icon={<Users size={20} className="text-white" />}
-                  trend={8.2}
                   color="bg-blue-500"
                 />
                 <StatCard
                   title="Total Loan Amount"
                   value={`₹${totalLoanAmount.toLocaleString()}`}
                   icon={<CreditCard size={20} className="text-white" />}
-                  trend={12.5}
                   color="bg-green-500"
                 />
                 <StatCard
                   title="Avg. Risk Score"
                   value={avgRiskScore}
                   icon={<BarChart3 size={20} className="text-white" />}
-                  trend={-2.4}
                   color="bg-yellow-500"
                 />
                 <StatCard
                   title="High Risk Borrowers"
                   value={highRiskCount}
                   icon={<TrendingUp size={20} className="text-white" />}
-                  trend={5.7}
                   color="bg-purple-500"
                 />
               </div>
 
-              {/* Charts and Activity */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                  <ChartPlaceholder />
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow-md">
-                  <h3 className="text-lg font-medium mb-4">Recent Activity</h3>
-                  <div className="space-y-1 divide-y">
-                    <RecentActivityItem
-                      title="New Borrower"
-                      time="2 hours ago"
-                      description={`${borrowers[0]?.name || 'A customer'} signed up as a new borrower`}
-                      icon={<Users size={16} className="text-white" />}
-                      color="bg-blue-500"
-                    />
-                    <RecentActivityItem
-                      title="Loan Approved"
-                      time="5 hours ago"
-                      description={`Loan for ₹${borrowers[1]?.loanAmount.toLocaleString() || '150,000'} was approved`}
-                      icon={<BarChart size={16} className="text-white" />}
-                      color="bg-green-500"
-                    />
-                    <RecentActivityItem
-                      title="Risk Alert"
-                      time="1 day ago"
-                      description="High risk borrower identified requiring review"
-                      icon={<HelpCircle size={16} className="text-white" />}
-                      color="bg-yellow-500"
-                    />
-                    <RecentActivityItem
-                      title="System Update"
-                      time="2 days ago"
-                      description="Risk assessment algorithm improved to version 2.4"
-                      icon={<Settings size={16} className="text-white" />}
-                      color="bg-purple-500"
-                    />
-                  </div>
-                </div>
-              </div>
+              {/* Borrower Table */}
+              <BorrowerTable
+                borrowers={borrowers}
+                onViewDetails={handleViewBorrowerDetails}
+              />
             </>
           ) : (
             <div className="text-center py-12">

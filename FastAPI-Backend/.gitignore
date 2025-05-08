@@ -1,0 +1,19 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environment
+venv/
+env/
+
+# Model and data files (optional — if not needed in version control)
+*.pkl
+*.txt
+
+# VSCode settings (optional)
+.vscode/
+
+# OS junk
+.DS_Store
+Thumbs.db

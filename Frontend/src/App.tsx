@@ -8,7 +8,8 @@ import { Dashboard } from './pages/Dashboard';
 import { Documentation } from './pages/Documentation';
 import { CaseStudies } from './pages/CaseStudies';
 import { Layout } from './Components/Layout';
-import {AnalyticsPage} from './pages/Analytics';
+import Analytics from './pages/Analytics';
+
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { currentUser } = useAuth();
@@ -32,7 +33,7 @@ function App() {
               </PrivateRoute>
             }
           />
-          <Route path='/analytics' element={<AnalyticsPage  />}/>
+          <Route path='/analytics' element={<Analytics />}/>
           </Route>
           <Route path='/docs' element={<Documentation />} />
           <Route path='/case-studies' element={<CaseStudies/>}/>
