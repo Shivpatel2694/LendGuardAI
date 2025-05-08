@@ -3,7 +3,8 @@ const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
 require('dotenv').config();
-
+const mockDataRouter = require('./Routes/mockDataRouter');
+const borrowerRoutes = require('./Routes/borrowerRoutes');
 // Import routes
 const authRoutes = require('./Routes/auth');
 
@@ -22,6 +23,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api', mockDataRouter);
+app.use('/api/borrowers', borrowerRoutes);
 
 // Home route
 app.get('/', (req, res) => {

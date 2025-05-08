@@ -85,6 +85,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       const { token, user } = response.data;
       localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('token', token);
       setCurrentUser(user);
       setAuthToken(token);
       return user;
@@ -106,6 +107,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       const { token, user } = response.data;
       localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('token', token);
       setCurrentUser(user);
       setAuthToken(token);
       return user;
