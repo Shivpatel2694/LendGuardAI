@@ -1,7 +1,8 @@
-import React from 'react';
-// import { ArrowRight } from 'lucide-react';
 
-export const CallToAction = () => {
+interface CallToActionProps {
+  onDemoClick: () => void | Promise<void>;
+}
+export const CallToAction = ({onDemoClick} : CallToActionProps) => {
   return (
     <section className="py-20">
       <div className="container mx-auto px-4 lg:px-8">
@@ -14,8 +15,11 @@ export const CallToAction = () => {
               Schedule a demo to see how our AI-powered early warning system can transform your lending operations.
             </p>
             <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center">
-             
-              <button className="bg-transparent border-2 border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+              <button
+                type="button"
+                className="bg-transparent border-2 border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                onClick={onDemoClick}
+              >
                 Learn More
               </button>
             </div>

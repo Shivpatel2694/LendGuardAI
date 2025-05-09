@@ -36,6 +36,7 @@ export const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   // Handle click on menu item
   const handleMenuClick = (path: string) => {
     setActiveItem(path);
+    setSidebarOpen(true); 
   };
 
   return (

@@ -1,12 +1,8 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import {
-  Home,
-  BarChart,
   BarChart3,
   Users,
-  Settings,
-  HelpCircle,
   Bell,
   Search,
   Database,
@@ -19,18 +15,55 @@ import {
   Eye,
   XCircle
 } from 'lucide-react';
-
+interface Borrower {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number: string;
+  date_of_birth: string;
+  address: string;
+  aadhar_number?: string;
+  pan_number?: string;
+  risk_score?: number;
+  risk_level?: string;
+  risk_description?: string;
+  risk_factors?: { factor: string; description: string; severity: string; value: string }[];
+  recommendations?: string[];
+  loans?: {
+    id: string;
+    borrower_id: string;
+    loan_amount: string;
+    interest_rate: string;
+    tenure_months: number;
+    emi_amount: string;
+    loan_status: string;
+    disbursement_date: string;
+  }[];
+  financial_transactions?: {
+    id: string;
+    borrower_id: string;
+    transaction_date: string;
+    account_number: string;
+    transaction_type: string;
+    category?: string;
+    amount: string;
+    description?: string;
+  }[];
+  loan_amount?: string; // Add loan_amount here
+}
 // Mock Data Modal Component
 const MockDataModal = ({ onComplete, lenderId }: { onComplete: () => void; lenderId: string }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const steps = [
     "Initializing process",
     "Generating synthetic borrower profiles",
     "Preparing dashboard"
   ];
+
 
   const handleGenerateMockData = async () => {
     setIsLoading(true);
@@ -62,7 +95,13 @@ const MockDataModal = ({ onComplete, lenderId }: { onComplete: () => void; lende
       localStorage.setItem('mockDataGenerated', 'true');
       onComplete();
     } catch (error) {
-      setError(error.message);
+      if (error instanceof Error) {
+        
+          setError(error.message);
+    
+      } else {
+        setError('An unknown error occurred.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -141,10 +180,10 @@ const MockDataModal = ({ onComplete, lenderId }: { onComplete: () => void; lende
 };
 
 // Borrower Detail Modal Component
-const BorrowerDetailModal = ({ borrower, onClose }) => {
+const BorrowerDetailModal = ({ borrower, onClose }: { borrower: Borrower | null; onClose: () => void }) => {
   if (!borrower) return null;
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   };
@@ -169,7 +208,7 @@ const BorrowerDetailModal = ({ borrower, onClose }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <p className="text-sm text-gray-500">Full Name</p>
-                <p className="font-medium">{borrower.name}</p>
+                <p className="font-medium">{borrower.first_name+borrower.last_name}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Email</p>
@@ -209,13 +248,12 @@ const BorrowerDetailModal = ({ borrower, onClose }) => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Risk Level</p>
-                  <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                    borrower.risk_level === 'Very Low Risk' ? 'bg-green-100 text-green-800' :
-                    borrower.risk_level === 'Low Risk' ? 'bg-green-100 text-green-800' :
-                    borrower.risk_level === 'Moderate Risk' ? 'bg-yellow-100 text-yellow-800' :
-                    borrower.risk_level === 'High Risk' ? 'bg-red-100 text-red-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
+                  <span className={`px-2 py-1 text-xs rounded-full font-medium ${borrower.risk_level === 'Very Low Risk' ? 'bg-green-100 text-green-800' :
+                      borrower.risk_level === 'Low Risk' ? 'bg-green-100 text-green-800' :
+                        borrower.risk_level === 'Moderate Risk' ? 'bg-yellow-100 text-yellow-800' :
+                          borrower.risk_level === 'High Risk' ? 'bg-red-100 text-red-800' :
+                            'bg-red-100 text-red-800'
+                    }`}>
                     {borrower.risk_level}
                   </span>
                 </div>
@@ -275,12 +313,11 @@ const BorrowerDetailModal = ({ borrower, onClose }) => {
                         <td className="px-4 py-2 whitespace-nowrap">{loan.tenure_months}</td>
                         <td className="px-4 py-2 whitespace-nowrap">₹{parseFloat(loan.emi_amount).toLocaleString()}</td>
                         <td className="px-4 py-2 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            loan.loan_status === 'Active' ? 'bg-green-100 text-green-800' :
-                            loan.loan_status === 'Late' ? 'bg-yellow-100 text-yellow-800' :
-                            loan.loan_status === 'Default' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
+                          <span className={`px-2 py-1 text-xs rounded-full ${loan.loan_status === 'Active' ? 'bg-green-100 text-green-800' :
+                              loan.loan_status === 'Late' ? 'bg-yellow-100 text-yellow-800' :
+                                loan.loan_status === 'Default' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'
+                            }`}>
                             {loan.loan_status}
                           </span>
                         </td>
@@ -289,7 +326,7 @@ const BorrowerDetailModal = ({ borrower, onClose }) => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7" className="px-4 py-4 text-center text-gray-500">No active loans</td>
+                      <td colSpan={7} className="px-4 py-4 text-center text-gray-500">No active loans</td>
                     </tr>
                   )}
                 </tbody>
@@ -319,9 +356,8 @@ const BorrowerDetailModal = ({ borrower, onClose }) => {
                         <td className="px-4 py-2 whitespace-nowrap">{formatDate(transaction.transaction_date)}</td>
                         <td className="px-4 py-2 whitespace-nowrap">{transaction.account_number}</td>
                         <td className="px-4 py-2 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            transaction.transaction_type === 'Credit' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
+                          <span className={`px-2 py-1 text-xs rounded-full ${transaction.transaction_type === 'Credit' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}>
                             {transaction.transaction_type}
                           </span>
                         </td>
@@ -332,7 +368,7 @@ const BorrowerDetailModal = ({ borrower, onClose }) => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="6" className="px-4 py-4 text-center text-gray-500">No financial transactions</td>
+                      <td colSpan={6} className="px-4 py-4 text-center text-gray-500">No financial transactions</td>
                     </tr>
                   )}
                 </tbody>
@@ -346,7 +382,14 @@ const BorrowerDetailModal = ({ borrower, onClose }) => {
 };
 
 // BorrowerTable component for displaying borrower overview
-const BorrowerTable = ({ borrowers, onViewDetails }) => (
+// 
+const BorrowerTable = ({
+  borrowers,
+  onViewDetails,
+}: {
+  borrowers: Borrower[];
+  onViewDetails: (borrower: Borrower) => void;
+}) => (
   <div className="bg-white p-6 rounded-lg shadow-md">
     <h3 className="text-lg font-medium mb-4">Borrower Details</h3>
     <div className="overflow-x-auto">
@@ -369,30 +412,29 @@ const BorrowerTable = ({ borrowers, onViewDetails }) => (
               className="hover:bg-gray-50 cursor-pointer transition-colors"
               onClick={() => onViewDetails(borrower)}
             >
-              <td className="px-6 py-4 whitespace-nowrap">{borrower.name}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{borrower.first_name+borrower.last_name}</td>
               <td className="px-6 py-4 whitespace-nowrap">{borrower.email}</td>
               <td className="px-6 py-4 whitespace-nowrap">{borrower.phone_number}</td>
               <td className="px-6 py-4 whitespace-nowrap">
-                {parseFloat(borrower.loan_amount) > 0 ?
-                  `₹${parseFloat(borrower.loan_amount).toLocaleString()}` :
-                  '₹0 (No active loans)'}
+                {borrower.loan_amount && parseFloat(borrower.loan_amount) > 0
+                  ? `₹${parseFloat(borrower.loan_amount).toLocaleString()}`
+                  : '₹0 (No active loans)'}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 {borrower.risk_score !== undefined ? borrower.risk_score.toFixed(2) : 'N/A'}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                {parseFloat(borrower.loan_amount) === 0 ? (
+                {borrower.loan_amount && parseFloat(borrower.loan_amount) === 0 ? (
                   <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
                     Low Risk
                   </span>
                 ) : borrower.risk_level ? (
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    borrower.risk_level === 'Very Low Risk' ? 'bg-green-100 text-green-800' :
-                    borrower.risk_level === 'Low Risk' ? 'bg-green-100 text-green-800' :
-                    borrower.risk_level === 'Moderate Risk' ? 'bg-yellow-100 text-yellow-800' :
-                    borrower.risk_level === 'High Risk' ? 'bg-red-100 text-red-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
+                  <span className={`px-2 py-1 text-xs rounded-full ${borrower.risk_level === 'Very Low Risk' ? 'bg-green-100 text-green-800' :
+                      borrower.risk_level === 'Low Risk' ? 'bg-green-100 text-green-800' :
+                        borrower.risk_level === 'Moderate Risk' ? 'bg-yellow-100 text-yellow-800' :
+                          borrower.risk_level === 'High Risk' ? 'bg-red-100 text-red-800' :
+                            'bg-red-100 text-red-800'
+                    }`}>
                     {borrower.risk_level}
                   </span>
                 ) : 'N/A'}
@@ -416,9 +458,14 @@ const BorrowerTable = ({ borrowers, onViewDetails }) => (
     </div>
   </div>
 );
-
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  color: string;
+}
 // Dashboard Components
-const StatCard = ({ title, value, icon, color }) => (
+const StatCard = ({ title, value, icon, color }: StatCardProps) => (
   <div className="bg-white p-6 rounded-lg shadow-md">
     <div className="flex justify-between items-start mb-4">
       <div>
@@ -434,12 +481,13 @@ const StatCard = ({ title, value, icon, color }) => (
 
 export const Dashboard = () => {
   const [showModal, setShowModal] = useState(false);
-  const [borrowers, setBorrowers] = useState([]);
-  const [selectedBorrower, setSelectedBorrower] = useState(null);
+  const [borrowers, setBorrowers] = useState<Borrower[]>([]);
+  const [selectedBorrower, setSelectedBorrower] = useState<Borrower | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
+  console.log(isNewUser);
   // Mock currentUser for development
   const currentUser = { id: '123e4567-e89b-12d3-a456-426614174000', email: 'demo@example.com' };
 
@@ -478,10 +526,10 @@ export const Dashboard = () => {
 
       const borrowersData = await response.json();
       // Fetch risk scores for each borrower
-      const borrowersWithRisk = await Promise.all(borrowersData.map(async (borrower) => {
+      const borrowersWithRisk = await Promise.all(borrowersData.map(async (borrower : Borrower) => {
         try {
           // Check if borrower has zero loan amount - if so, set as low risk
-          const loanAmount = parseFloat(borrower.loan_amount) || 0;
+          const loanAmount = parseFloat(borrower.loan_amount || '0') || 0;
 
           if (loanAmount === 0) {
             return {
@@ -497,9 +545,9 @@ export const Dashboard = () => {
           // Transform borrower data to match BorrowerRequest schema
           const transformedBorrower = {
             id: borrower.id || 'unknown',
-            name: borrower.name || 'Unknown Borrower',
-            first_name: borrower.first_name || borrower.name?.split(' ')[0] || 'Unknown',
-            last_name: borrower.last_name || borrower.name?.split(' ').slice(1).join(' ') || 'Unknown',
+            name: borrower.first_name+borrower.last_name || 'Unknown Borrower',
+            first_name: borrower.first_name || borrower.first_name?.split(' ')[0] || 'Unknown',
+            last_name: borrower.last_name || borrower.last_name?.split(' ').slice(1).join(' ') || 'Unknown',
             email: borrower.email || 'unknown@example.com',
             phone_number: borrower.phone_number || '0000000000',
             address: borrower.address || 'Unknown Address',
@@ -512,7 +560,7 @@ export const Dashboard = () => {
               borrower_id: loan.borrower_id || borrower.id,
               loan_amount: parseFloat(loan.loan_amount) || 0,
               interest_rate: parseFloat(loan.interest_rate) || 0,
-              tenure_months: parseInt(loan.tenure_months) || 12,
+              tenure_months: loan.tenure_months || 12,
               emi_amount: parseFloat(loan.emi_amount) || 0,
               disbursement_date: loan.disbursement_date || '2023-01-01',
               loan_status: loan.loan_status && ['Active', 'Late', 'Default'].includes(loan.loan_status)
@@ -527,7 +575,7 @@ export const Dashboard = () => {
               transaction_type: transaction.transaction_type || 'Credit',
               category: transaction.category || null,
               amount: parseFloat(transaction.amount) || 0,
-              balance: transaction.balance ? parseFloat(transaction.balance) || null : null,
+              balance: transaction.amount ? parseFloat(transaction.amount) || null : null,
               description: transaction.description || null,
             })) || [],
           };
@@ -559,7 +607,7 @@ export const Dashboard = () => {
         } catch (err) {
           console.error(`Error fetching risk for borrower ${borrower.id}:`, err);
 
-          const loanAmount = parseFloat(borrower.loan_amount) || 0;
+          const loanAmount = parseFloat(borrower.loan_amount ?? '0') || 0;
           if (loanAmount === 0) {
             return {
               ...borrower,
@@ -578,7 +626,13 @@ export const Dashboard = () => {
       setBorrowers(borrowersWithRisk);
     } catch (error) {
       console.error('Error fetching borrowers:', error);
-      setError(error.message);
+      if (error instanceof Error) {
+        
+          setError(error.message);
+    
+      } else {
+        setError('An unknown error occurred.');
+      }
       setBorrowers([]);
     } finally {
       setIsLoading(false);
@@ -590,7 +644,7 @@ export const Dashboard = () => {
     setShowModal(false);
   };
 
-  const handleViewBorrowerDetails = (borrower) => {
+  const handleViewBorrowerDetails = (borrower : Borrower) => {
     setSelectedBorrower(borrower);
   };
 
@@ -605,10 +659,10 @@ export const Dashboard = () => {
 
   // Calculate stats, counting zero loan borrowers as low risk
   const totalBorrowers = borrowers.length;
-  const totalLoanAmount = borrowers.reduce((sum, b) => sum + (parseFloat(b.loan_amount) || 0), 0);
-  const avgRiskScore = borrowers.length > 0
+  const totalLoanAmount = borrowers.reduce((sum, b) => sum + (parseFloat(b.loan_amount || '0') || 0), 0);
+  const avgRiskScore = totalBorrowers > 0
     ? Math.round(
-        borrowers.reduce((sum, b) => sum + (b.risk_score !== undefined ? b.risk_score : 0.2), 0) / totalBorrowers
+        borrowers.reduce((sum, b) => sum + (b.risk_score ?? 0.2), 0) / totalBorrowers
       )
     : 0;
   const highRiskCount = borrowers.filter(

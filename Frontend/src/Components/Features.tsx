@@ -1,5 +1,5 @@
-import React from 'react';
-import { Database, TrendingUp, BarChartBig, Zap, Bell } from 'lucide-react';
+
+import { Database, TrendingUp, BarChartBig, Bell } from 'lucide-react';
 
 export const Features = () => {
   return (

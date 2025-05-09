@@ -15,10 +15,11 @@ import { AlertCircle, CheckCircle, AlertTriangle, XCircle, Info, Award } from 'l
 
 // Analytics component that displays risk scores for borrowers
 export default function Analytics({ borrowers = [] }) {
-  const [riskData, setRiskData] = useState([]);
+  const [riskData, setRiskData] = useState<RiskDataItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedBorrower, setSelectedBorrower] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  // const [selectedBorrower, setSelectedBorrower] = useState(null);
+  const [selectedBorrower, setSelectedBorrower] = useState<RiskDataItem | null>(null);
   const [categoryStats, setCategoryStats] = useState({
     Low: 0,
     Medium: 0,
@@ -27,6 +28,16 @@ export default function Analytics({ borrowers = [] }) {
   });
 
   const API_URL = 'http://localhost:8000'; // Update this with your actual API URL
+
+ interface RiskDataItem {
+  risk_category: 'Low' | 'Medium' | 'High' | 'Very High';
+  risk_score: number;
+  name: string;
+  borrower_id: string; // Ensure this matches the key used in the map
+  top_factors?: { feature: string; importance: number }[]; // Optional property for top factors
+}
+
+
 
   useEffect(() => {
     const fetchRiskScores = async () => {
@@ -60,7 +71,7 @@ export default function Analytics({ borrowers = [] }) {
           'Very High': 0
         };
 
-        data.forEach(item => {
+        data.forEach((item : RiskDataItem)=> {
           stats[item.risk_category] = (stats[item.risk_category] || 0) + 1;
         });
         setCategoryStats(stats);
@@ -71,7 +82,11 @@ export default function Analytics({ borrowers = [] }) {
         }
       } catch (err) {
         console.error('Error fetching risk data:', err);
-        setError(err.message);
+          if (err instanceof Error) {
+    setError(err.message);
+  } else {
+    setError('An unknown error occurred while fetching risk data.');
+  }
       } finally {
         setLoading(false);
       }
@@ -80,7 +95,7 @@ export default function Analytics({ borrowers = [] }) {
     fetchRiskScores();
   }, [borrowers]);
 
-  const getRiskIcon = (category) => {
+  const getRiskIcon = (category: RiskDataItem['risk_category']) => {
     switch (category) {
       case 'Low':
         return <CheckCircle className="text-green-500" size={24} />;
@@ -95,7 +110,7 @@ export default function Analytics({ borrowers = [] }) {
     }
   };
 
-  const getRiskColor = (category) => {
+  const getRiskColor = (category: RiskDataItem['risk_category']) => {
     switch (category) {
       case 'Low': return 'bg-green-100 text-green-800 border-green-200';
       case 'Medium': return 'bg-blue-100 text-blue-800 border-blue-200';
@@ -148,13 +163,13 @@ export default function Analytics({ borrowers = [] }) {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         {Object.entries(categoryStats).map(([category, count]) => (
-          <div key={category} className={`p-4 rounded-lg border ${getRiskColor(category)}`}>
+          <div key={category} className={`p-4 rounded-lg border ${getRiskColor(category as RiskDataItem['risk_category'])}`}>
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-sm font-medium">{category} Risk</p>
                 <p className="text-2xl font-bold">{count}</p>
               </div>
-              {getRiskIcon(category)}
+              {getRiskIcon(category as RiskDataItem['risk_category'])}
             </div>
           </div>
         ))}
@@ -194,8 +209,14 @@ export default function Analytics({ borrowers = [] }) {
                 label={{ value: 'Borrowers (Sorted by Risk)', position: 'insideBottom', offset: -5 }}
               />
               <YAxis domain={[0, 100]} label={{ value: 'Risk Score', angle: -90, position: 'insideLeft' }} />
-              <Tooltip formatter={(value) => [`${value.toFixed(2)}`, 'Risk Score']} />
-              <Line
+<Tooltip
+  formatter={(value) => {
+    if (typeof value === 'number') {
+      return [`${value.toFixed(2)}`, 'Risk Score'];
+    }
+    return [value, 'Risk Score']; // Fallback for non-number values
+  }}
+/>              <Line
                 type="monotone"
                 dataKey="risk_score"
                 stroke="#3B82F6"

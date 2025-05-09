@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -13,10 +13,11 @@ export const SignUp = () => {
   const [designation, setDesignation] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [logo, setLogo] = useState(null);
+  // const [logo, setLogo] = useState(null);
+  const [logo, setLogo] = useState<File | null>(null);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [logoPreview, setLogoPreview] = useState(null);
-
+  setLogoPreview(null); // Reset logo preview on component mount
   // UI states
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -27,12 +28,11 @@ export const SignUp = () => {
 
   console.log('Auth context loaded:', !!signUp); // Log if auth context is loaded properly
 
-  const handleLogoChange = (e) => {
-    if (e.target.files[0]) {
-      const selectedFile = e.target.files[0];
-      console.log('Logo selected:', selectedFile.name, selectedFile.type, selectedFile.size);
-      setLogo(selectedFile);
-
+  const handleLogoChange = (e:React.ChangeEvent<HTMLInputElement>) => {
+     if (e.target.files && e.target.files[0]) {
+    const selectedFile = e.target.files[0];
+    console.log('Logo selected:', selectedFile.name, selectedFile.type, selectedFile.size);
+    setLogo(selectedFile);
       // Create preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -44,7 +44,7 @@ export const SignUp = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log('Form submission started');
     console.log('Form data:', {

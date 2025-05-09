@@ -6,17 +6,16 @@ import { Sidebar } from '../Components/Sidebar';
 import { Outlet } from 'react-router-dom';
 
 interface LayoutProps {
-  
   showSidebar?: boolean;
 }
 
-export const Layout = ({  showSidebar = true }: LayoutProps) => {
+export const Layout = ({ showSidebar = true }: LayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Navbar */}
-      <Navbar 
+      <Navbar
         showAuthButtons={false}
         sidebarOpen={showSidebar ? sidebarOpen : undefined}
         setSidebarOpen={showSidebar ? setSidebarOpen : undefined}
@@ -41,9 +40,13 @@ export const Layout = ({  showSidebar = true }: LayoutProps) => {
         )}
 
         {/* Main Content */}
-        <main className={`flex-1 p-6 transition-all duration-300 ${showSidebar && sidebarOpen ? 'lg:pl-6' : 'lg:pl-6'}`}>
+        <main
+          className={`flex-1 p-6 transition-all duration-300 ${
+            showSidebar && sidebarOpen ? 'lg:pl-6' : 'lg:pl-6'
+          }`}
+        >
           <div className="max-w-7xl mx-auto">
-            <Outlet/>
+            <Outlet />
           </div>
         </main>
       </div>

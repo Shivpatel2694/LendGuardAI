@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { LineChart, BarChart3, PieChart, AlertTriangle } from 'lucide-react';
+import { useState } from 'react';
+import {  AlertTriangle } from 'lucide-react';
 
 export const Demo = () => {
-  const [activeTab, setActiveTab] = useState('analytics');
-  
+  // Explicitly type the state to avoid warnings
+  const [activeTab, setActiveTab] = useState<'analytics' | 'ai' | 'alerts'>('analytics');
+
   return (
     <section id="demo" className="py-20 bg-gray-50">
       <div className="container mx-auto px-4 lg:px-8">
@@ -13,42 +14,42 @@ export const Demo = () => {
             See how our AI-powered system transforms raw financial data into actionable insights.
           </p>
         </div>
-        
+
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           {/* Tabs */}
           <div className="flex border-b">
-            <button 
+            <button
               onClick={() => setActiveTab('analytics')}
               className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
-                activeTab === 'analytics' 
-                  ? 'text-blue-600 border-b-2 border-blue-600' 
+                activeTab === 'analytics'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               Analytics Dashboard
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('ai')}
               className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
-                activeTab === 'ai' 
-                  ? 'text-blue-600 border-b-2 border-blue-600' 
+                activeTab === 'ai'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               AI Component
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('alerts')}
               className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
-                activeTab === 'alerts' 
-                  ? 'text-blue-600 border-b-2 border-blue-600' 
+                activeTab === 'alerts'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               Risk Alerts
             </button>
           </div>
-          
+
           {/* Tab Content */}
           <div className="p-6">
             {activeTab === 'analytics' && (
@@ -65,12 +66,12 @@ export const Demo = () => {
                         <div className="absolute bottom-0 left-[50%] w-1/6 h-[75%] bg-blue-500 rounded-t"></div>
                         <div className="absolute bottom-0 left-[66.666%] w-1/6 h-[40%] bg-blue-400 rounded-t"></div>
                         <div className="absolute bottom-0 left-[83.333%] w-1/6 h-[30%] bg-red-400 rounded-t"></div>
-                        
+
                         {/* Trend line */}
                         <div className="absolute bottom-[30%] left-0 right-0 h-0.5 bg-blue-600 z-10"></div>
                         <div className="absolute bottom-[30%] right-[8.333%] h-10 w-0.5 bg-red-500 z-20"></div>
                       </div>
-                      
+
                       <div className="flex justify-between text-xs text-gray-500 mt-2">
                         <span>Jan</span>
                         <span>Feb</span>
@@ -86,7 +87,7 @@ export const Demo = () => {
                     Income dropped 40% in the last month
                   </div>
                 </div>
-                
+
                 <div className="space-y-6">
                   <div className="bg-gray-50 p-5 rounded-lg">
                     <h3 className="text-lg font-medium mb-3">Expense Categories</h3>
@@ -100,7 +101,7 @@ export const Demo = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-gray-50 p-5 rounded-lg">
                     <h3 className="text-lg font-medium mb-3">EMI Payment Success</h3>
                     <div className="h-32 flex items-center justify-center bg-white rounded-lg p-4 border border-gray-200">
@@ -117,7 +118,7 @@ export const Demo = () => {
                 </div>
               </div>
             )}
-            
+
             {activeTab === 'ai' && (
               <div className="space-y-6">
                 <div className="bg-gray-50 p-5 rounded-lg">
@@ -129,7 +130,7 @@ export const Demo = () => {
                         High Risk (78%)
                       </span>
                     </div>
-                    
+
                     <div className="space-y-4">
                       <div>
                         <div className="flex justify-between mb-1">
@@ -137,31 +138,31 @@ export const Demo = () => {
                           <span className="text-sm font-medium">40%</span>
                         </div>
                         <div className="h-2 bg-gray-200 rounded-full">
-                          <div className="h-full bg-red-400 rounded-full" style={{width: '40%'}}></div>
+                          <div className="h-full bg-red-400 rounded-full" style={{ width: '40%' }}></div>
                         </div>
                       </div>
-                      
+
                       <div>
                         <div className="flex justify-between mb-1">
                           <span className="text-sm">Payment History</span>
                           <span className="text-sm font-medium">25%</span>
                         </div>
                         <div className="h-2 bg-gray-200 rounded-full">
-                          <div className="h-full bg-orange-400 rounded-full" style={{width: '25%'}}></div>
+                          <div className="h-full bg-orange-400 rounded-full" style={{ width: '25%' }}></div>
                         </div>
                       </div>
-                      
+
                       <div>
                         <div className="flex justify-between mb-1">
                           <span className="text-sm">Discretionary Spending</span>
                           <span className="text-sm font-medium">13%</span>
                         </div>
                         <div className="h-2 bg-gray-200 rounded-full">
-                          <div className="h-full bg-yellow-400 rounded-full" style={{width: '13%'}}></div>
+                          <div className="h-full bg-yellow-400 rounded-full" style={{ width: '13%' }}></div>
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="mt-6 pt-4 border-t">
                       <h4 className="font-medium mb-2">SHAP Value Explanation</h4>
                       <p className="text-sm text-gray-600">
@@ -173,7 +174,7 @@ export const Demo = () => {
                 </div>
               </div>
             )}
-            
+
             {activeTab === 'alerts' && (
               <div className="space-y-4">
                 <div className="bg-red-50 border border-red-100 p-4 rounded-lg">
@@ -199,7 +200,7 @@ export const Demo = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="bg-yellow-50 border border-yellow-100 p-4 rounded-lg">
                   <div className="flex">
                     <div className="mr-4">
@@ -223,7 +224,7 @@ export const Demo = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg">
                   <h3 className="font-medium text-blue-700 mb-3">Portfolio Risk Overview</h3>
                   <div className="bg-white p-4 rounded-lg border border-blue-200">
@@ -237,7 +238,7 @@ export const Demo = () => {
                         </div>
                         <div className="text-2xl font-bold">542</div>
                       </div>
-                      
+
                       <div className="ml-8">
                         <div className="space-y-2">
                           <div className="flex items-center">

@@ -1,4 +1,3 @@
-import React from 'react';
 import { LineChart, BarChart, PieChart } from 'lucide-react';
 
 export const Hero = () => {
